@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+
+package pb;
+//生成的文件放在哪里, .;pb 表示放在当前路径里面,如a/b,则会将该文件放在当前目录的~a/b下
+option go_package = ".;pb";
+
+service OAuthService {
+  rpc CheckToken(CheckTokenRequest) returns (CheckTokenResponse);
+}
+
+message CheckTokenRequest {
+  string token = 1;
+}
+
+
+message CheckTokenResponse {
+  UserDetails userDetails = 1;
+  ClientDetails clientDetails = 2;
+  bool isValidToken = 3;
+  string err = 4;
+}
+
+message ClientDetails {
+  string clientId = 1;
+  int32 accessTokenValiditySeconds = 2;
+  int32 refreshTokenValiditySeconds = 3;
+  repeated string authorizedGrantTypes = 4;
+}
+
+message UserDetails {
+  int64 userId = 1;
+  string username = 2;
+  repeated string authorities = 3;
+}

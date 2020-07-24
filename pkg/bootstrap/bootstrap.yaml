@@ -1,0 +1,29 @@
+#当前服务http信息
+http:
+  Host: 127.0.0.1
+  Port: 3001
+
+#当前服务rpc信息
+rpc:
+  Port: 3002
+
+#注册与发现服务中心的信息(instanceId启动的时候生成)
+discover:
+  Host: 127.0.0.1
+  Port: 8500
+  ServiceName: miaosha
+  Weight: 1
+  InstanceId:
+
+#配置中心服务端信息
+config:
+  Id:
+  Profile:
+  Label:
+
+#zookeeper服务端信息
+zookeeper:
+  Hosts:
+    - 127.0.0.1
+    - 127.0.0.2
+  SecProductKey: test
