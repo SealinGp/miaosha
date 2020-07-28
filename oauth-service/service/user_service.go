@@ -11,7 +11,7 @@ var (
 	InvalidAuthentication = errors.New("invalid auth")
 	InvalidUserInfo = errors.New("invalid user info")
 )
-type UserDetailService interface {
+type UserDetailsService interface {
 	GetUserDetailByUsername(ctx context.Context, username, password string) (*model.UserDetails,error)
 }
 

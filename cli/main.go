@@ -2,40 +2,24 @@ package main
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
-	"github.com/spf13/viper"
-	"log"
 )
 
-type ZookeeperConf struct {
-	Hosts []string
-	SecProductKey string
+type a struct {
+	B b  `json:"b"`
+	C c  `json:"c"`
+}
+type b struct {
+	B1 string `json:"b_1"`
+}
+type c struct {
+	C1 string `json:"c_1"`
 }
 
+//{"b":{"b1":"xxx"}},"c":{"c1":"xxx"}}
 func main() {
-	var ZookeeperConfig ZookeeperConf
-	viper.AutomaticEnv()
-	viper.SetConfigName("bootstrap")
-	viper.AddConfigPath("./cli")     //运行时的当前路径的相对路径
-	viper.SetConfigType("yaml")
-
-	fmt.Println(viper.ReadInConfig())
-	if err := SubParse("zookeeper",&ZookeeperConfig);err != nil {
-		log.Fatal("Fail to parse zookeeper server",err.Error())
-	}
-	b,_ := json.Marshal(ZookeeperConfig)
-	fmt.Println(string(b))
+	str := `{"b":{"b_1":"xxx"},"c":{"c_1":"xxx"}}`
+	m := a{}
+	json.Unmarshal([]byte(str),&m)
+	fmt.Println(m)
 }
-
-func SubParse(key string,value interface{}) error {
-	log.Printf("配置文件前缀为:%s",key)
-	sub := viper.Sub(key)
-	if sub == nil {
-		return errors.New("?? error")
-	}
-	sub.AutomaticEnv()
-	sub.SetEnvPrefix(key)
-	return sub.Unmarshal(value)
-}
-
