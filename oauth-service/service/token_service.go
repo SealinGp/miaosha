@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"github.com/dgrijalva/jwt-go"
 	uuid "github.com/satori/go.uuid"
-	"golang.org/x/text/date"
 	. "miaosha/oauth-service/model"
 	"net/http"
 	"time"
