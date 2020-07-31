@@ -193,7 +193,41 @@ func (tokenService *DefaultTokenService)createRefreshToken(details *OAuth2Detail
 	return refreshToken,nil
 }
 func (tokenService *DefaultTokenService)RefreshAccessToken(refreshTokenValue string) (*OAuth2Token, error)  {
+	//解密获取token
+	refreshToken, err := tokenService.tokenStore.ReadRefreshToken(refreshTokenValue)
+	if err != nil {
+		return nil,err
+	}
+	if refreshToken.IsExpired() {
+		return nil,ErrExpiredToken
+	}
 
+	//解密获取tokenDetails
+	oauth2Details, err := tokenService.tokenStore.ReadOAuth2DetailsForReFreshToken(refreshTokenValue)
+	if err != nil {
+		return nil,err
+	}
+	oauth2Token, err := tokenService.tokenStore.GetAccessToken(oauth2Details)
+	if err != nil {
+		return nil,err
+	}
+	//移除当前的tokenVal跟refreshTokenVal
+	tokenService.tokenStore.RemoveAccessToken(oauth2Token.TokenValue)
+	tokenService.tokenStore.RemoveRefreshToken(refreshTokenValue)
+
+	//重新生成
+	refreshToken, err = tokenService.createRefreshToken(oauth2Details)
+	if err != nil {
+		return nil,err
+	}
+	accessToken,err := tokenService.createAccessToken(refreshToken,oauth2Details)
+	if err != nil {
+		return nil,err
+	}
+
+	tokenService.tokenStore.StoreAccessToken(accessToken,oauth2Details)
+	tokenService.tokenStore.StoreRefreshToken(refreshToken,oauth2Details)
+	return accessToken,nil
 }
 func (tokenService *DefaultTokenService)GetAccessToken(details *OAuth2Details) (*OAuth2Token, error)  {
 
@@ -238,7 +272,7 @@ func (tokenStore *JwtTokenStore)StoreAccessToken(oauth2Token *OAuth2Token, oauth
 	token,_ := tokenStore.jwtTokenEnhancer.Enhance(oauth2Token,oauth2Details)
 
 	//todo 保存到redis
-	k  := fmt.Sprintf("%s:%d",oauth2Details.Client.ClientId,oauth2Details.User.UserId)
+	k  := genAccessTokenRedisKey(oauth2Details.Client.ClientId,oauth2Details.User.UserId)
 	tf := tokenInfo{
 		Details :*oauth2Details,
 		OldToken:*oauth2Token,
@@ -257,7 +291,7 @@ func (tokenStore *JwtTokenStore)ReadAuth2Details(tokenValue string) (*OAuth2Deta
 	return details,err
 }
 func (tokenStore *JwtTokenStore)GetAccessToken(oauth2Details *OAuth2Details) (*OAuth2Token,error)  {
-	//todo 从redis获取,然后做json.Unmarsha1
+	//todo 从redis获取,然后做json.Unmarsha1,拿不到说明没有授权|没有该客户端没有创建tokenVal
 	k  := fmt.Sprintf("%s:%d",oauth2Details.Client.ClientId,oauth2Details.User.UserId)
 	tf := tokenInfo{}
 	fmt.Println(k,tf)
@@ -270,20 +304,49 @@ func (tokenStore *JwtTokenStore)RemoveAccessToken(tokenValue string)  {
 	}
 
 	//todo 从redis删除key
-	k  := fmt.Sprintf("%s:%d",details.Client.ClientId,details.User.UserId)
+	k  := genAccessTokenRedisKey(details.Client.ClientId,details.User.UserId)
 	fmt.Println(k)
 }
 func (tokenStore *JwtTokenStore)StoreRefreshToken(oauth2Token *OAuth2Token, oauth2Details *OAuth2Details)  {
-	tokenStore.StoreAccessToken(oauth2Token.RefreshToken,oauth2Details)
+	token,_ := tokenStore.jwtTokenEnhancer.Enhance(oauth2Token,oauth2Details)
+
+	//todo 保存到redis
+	k  := genRefreshTokenRedisKey(oauth2Details.Client.ClientId,oauth2Details.User.UserId)
+	tf := tokenInfo{
+		Details :*oauth2Details,
+		OldToken:*oauth2Token,
+		NewToken:*token,
+	}
+	v1,_ := json.Marshal(tf)
+	v    := string(v1)
+	fmt.Println(k,v)
 }
-func (tokenStore *JwtTokenStore)RemoveRefreshToken(oauth2Token string)  {
-	tokenStore.RemoveAccessToken(oauth2Token)
+func (tokenStore *JwtTokenStore)RemoveRefreshToken(oauth2TokenVal string)  {
+	details,err := tokenStore.ReadAuth2Details(oauth2TokenVal)
+	if err != nil {
+		return
+	}
+
+	//todo 从redis删除key
+	k  := genRefreshTokenRedisKey(details.Client.ClientId,details.User.UserId)
+	fmt.Println(k)
 }
 func (tokenStore *JwtTokenStore)ReadRefreshToken(tokenValue string) (*OAuth2Token,error)  {
-	return tokenStore.ReadAccessToken(tokenValue)
+	token,err :=  tokenStore.ReadAccessToken(tokenValue)
+	if err != nil {
+		return nil,err
+	}
+	return token.RefreshToken,nil
 }
+
 func (tokenStore *JwtTokenStore)ReadOAuth2DetailsForReFreshToken(tokenValue string) (*OAuth2Details, error)  {
 	return tokenStore.ReadAuth2Details(tokenValue)
+}
+func genAccessTokenRedisKey(clientId string,userId int64) string {
+	return fmt.Sprintf("%s:%d:accessToken",clientId,userId)
+}
+func genRefreshTokenRedisKey(clientId string,userId int64) string {
+	return fmt.Sprintf("%s:%d:refreshToken",clientId,userId)
 }
 
 
@@ -317,11 +380,11 @@ func (enhancer *JwtTokenEnhancer)Extract(tokenValue string) (*OAuth2Token,*OAuth
 		return nil,nil,err
 	}
 	claims := token.Claims.(*OAuth2TokenCustomClaims)
-	exopiresTime := time.Unix(claims.ExpiresAt,0)
+	expiresTime := time.Unix(claims.ExpiresAt,0)
 	return &OAuth2Token{
 		RefreshToken:&claims.RefreshToken,
 		TokenValue:tokenValue,
-		ExpiresTime:&exopiresTime,
+		ExpiresTime:&expiresTime,
 	},&OAuth2Details{
 		User:&claims.UserDetails,
 		Client:&claims.ClientDetails,
