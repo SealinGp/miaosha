@@ -24,10 +24,12 @@ var (
 type TokenGranter interface {
 	Grant(ctx context.Context,grantType string,client *ClientDetails,reader *http.Request) (*OAuth2Token,error)
 }
+
+//token分发授权器
 type ComposeTokenGranter struct {
 	TokenGrantDict map[string]TokenGranter
 }
-func NewTokenGranter(tokenGrantDict map[string]TokenGranter) TokenGranter {
+func NewComposeTokenGranter(tokenGrantDict map[string]TokenGranter) TokenGranter {
 	return &ComposeTokenGranter{TokenGrantDict:tokenGrantDict}
 }
 func (tokenGranter *ComposeTokenGranter)Grant(ctx context.Context,grantType string,client *ClientDetails,reader *http.Request) (*OAuth2Token,error)  {
@@ -38,6 +40,7 @@ func (tokenGranter *ComposeTokenGranter)Grant(ctx context.Context,grantType stri
 	return dispatchGranter.Grant(ctx,grantType,client,reader)
 }
 
+//token帐号密码授权器
 type UsernamePasswordTokenGranter struct {
 	supportGranterType string
 	userDetailsService UserDetailsService
@@ -70,11 +73,11 @@ func (tokenGranter *UsernamePasswordTokenGranter)Grant(ctx context.Context,grant
 	})
 }
 
+//token刷新授权期
 type RefreshTokenGranter struct {
 	supportGrantType string
 	tokenService TokenService
 }
-
 func NewRefreshGranter(grantType string,service TokenService) TokenGranter {
 	return &RefreshTokenGranter{
 		supportGrantType: grantType,
@@ -229,10 +232,10 @@ func (tokenService *DefaultTokenService)RefreshAccessToken(refreshTokenValue str
 	return accessToken,nil
 }
 func (tokenService *DefaultTokenService)GetAccessToken(details *OAuth2Details) (*OAuth2Token, error)  {
-
+	return tokenService.tokenStore.GetAccessToken(details)
 }
 func (tokenService *DefaultTokenService)ReadAccessToken(tokenValue string) (*OAuth2Token, error)  {
-
+	return tokenService.tokenStore.ReadAccessToken(tokenValue)
 }
 
 //token存储
