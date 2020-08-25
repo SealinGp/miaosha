@@ -18,7 +18,7 @@ func InitMysql(host,port,user,pwd,db string)  {
 	}
 	engin, err = gorose.Open(DbConfig)
 	if err != nil {
-		fmt.Printf(err)
+		fmt.Println(err)
 		return
 	}
 }

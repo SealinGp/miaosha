@@ -1,0 +1,20 @@
+http:
+  host: 127.0.0.1
+  port: 9019
+
+rpc:
+  host: 127.0.0.1
+  port: 9018
+
+discover:
+  Host: 127.0.0.1
+  port: 8500
+  instanceId: oauth-service-localhost
+  serviceName: oauth
+  weight: 10
+
+#id = 服务注册发现中心的配置中心注册的serviceName
+config:
+  id: configserver
+  profile: "dev"
+  label: "master"

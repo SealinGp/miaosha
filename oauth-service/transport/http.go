@@ -28,7 +28,7 @@ func MakeHttpHandler(
 	tokenService service.TokenService,clientService service.ClientDetailsService,
 	zipkinTracer *gozipkin.Tracer,
 	logger log.Logger,
-)  {
+) http.Handler {
 	r            := mux.NewRouter()
 	zipkinServer := zipkin.HTTPServerTrace(zipkinTracer,zipkin.Name("http-transport"))
 	options      := []kithttp.ServerOption{
@@ -64,6 +64,7 @@ func MakeHttpHandler(
 		encodeJsonResponse,
 		options...
 	))
+	return r
 }
 
 func makeClientAuthorizationContext(clientDetailsService service.ClientDetailsService,logger log.Logger) kithttp.RequestFunc {
