@@ -3,14 +3,12 @@ package config
 import (
 	"github.com/go-redis/redis"
 	"github.com/samuel/go-zookeeper/zk"
-	"go.etcd.io/etcd/clientv3"
 	"miaosha/sk-core/service/srv_limit"
 	"sync"
 )
 
 var (
 	Redis       RedisConf
-	Etcd        EtcdConf
 	SecKill     SecKillConf
 	MysqlConfig MysqlConf
 	TraceConfig TraceConf
@@ -22,11 +20,7 @@ type ZookeeperConf struct {
 	SecProductKey string //商品键
 }
 
-type EtcdConf struct {
-	EtcdConn *clientv3.Client
-	EtcdSecProductKey string //商品键
-	Host string
-}
+
 type TraceConf struct {
 	Host string
 	Port string
@@ -57,7 +51,6 @@ type RedisConf struct {
 
 type SecKillConf struct {
 	RedisConf *RedisConf
-	EtcdConf  *EtcdConf
 	CookieSecretKey string
 	ReferWhiteList []string //白名单
 

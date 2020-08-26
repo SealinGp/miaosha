@@ -1,1 +1,1 @@
-protoc --go_out=plugins=grpc:.  oauth.proto
+protoc --go_out=plugins=grpc:.  oauth.proto user.proto

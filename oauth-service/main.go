@@ -28,6 +28,8 @@ import (
 )
 
 func main()  {
+	fmt.Println("?")
+	return
 	var (
 		servicePort = flag.String("service.port",bootstrap.HttpConfig.Port,"service port")
 		grpcAddr   = flag.String("grpc",bootstrap.RpcConfig.Port,"grpc listen address")

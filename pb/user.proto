@@ -1,6 +1,8 @@
 syntax = "proto3";
 
 package pb;
+//生成的文件放在哪里, .;pb 表示放在当前路径里面,如a/b,则会将该文件放在当前目录的~a/b下
+option go_package = ".;pb";
 
 service UserService{
   rpc Check(UserRequest) returns (UserResponse){}

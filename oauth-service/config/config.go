@@ -18,6 +18,7 @@ var ZipkinTracer *zipkin.Tracer
 var Logger log.Logger
 
 func init()  {
+	fmt.Println("config 3")
 	Logger = log.NewLogfmtLogger(os.Stderr)
 	Logger = log.With(Logger,"ts",log.DefaultTimestamp)
 	Logger = log.With(Logger,"caller",log.DefaultCaller)
