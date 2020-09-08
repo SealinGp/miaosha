@@ -15,11 +15,11 @@ discover:
   Weight: 1
   InstanceId:
 
-#配置中心服务端信息
+#id = 服务注册发现中心的配置中心注册的serviceName
 config:
-  Id:
-  Profile:
-  Label:
+  id: configserver
+  profile: "dev"
+  label: "master"
 
 #zookeeper服务端信息
 zookeeper:
