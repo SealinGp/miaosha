@@ -8,7 +8,6 @@ import (
 )
 
 func init()  {
-	fmt.Println("config 1")
 	viper.AutomaticEnv()
 	initBootstrapConfig()
 
@@ -40,7 +39,7 @@ func initBootstrapConfig()  {
 }
 
 func SubParse(key string,value interface{}) error {
-	log.Printf("1配置文件前缀为:%s",key)
+	log.Printf("配置文件前缀为:%s",key)
 	sub := viper.Sub(key)
 	if sub == nil {
 		return errors.New("parse sub error")

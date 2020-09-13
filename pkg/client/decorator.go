@@ -5,6 +5,13 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"time"
+
+	"miaosha/pkg/bootstrap"
+	conf "miaosha/pkg/config"
+	"miaosha/pkg/discover"
+	"miaosha/pkg/loadbalance"
+
 
 	"github.com/afex/hystrix-go/hystrix"
 	"github.com/grpc-ecosystem/grpc-opentracing/go/otgrpc"
@@ -14,21 +21,19 @@ import (
 	zipkinReporter "github.com/openzipkin/zipkin-go/reporter"
 	zipkinhttp "github.com/openzipkin/zipkin-go/reporter/http"
 	grpcOri "google.golang.org/grpc"
-
-	"miaosha/pkg/bootstrap"
-	conf "miaosha/pkg/config"
-	"miaosha/pkg/discover"
-	"miaosha/pkg/loadbalance"
-	"time"
+)
+var (
+	ErrRPCService = errors.New("no rpc service")
 )
 
-//rpc客户端装饰器
-
+//general grpc client manager interface
 type ClientManager interface {
 	DecoratorInvoke(path string, hystrixName string, tracer opentracing.Tracer,
 		ctx context.Context, inputVal interface{}, outVal interface{}) (err error)
 }
 
+
+//default client manager interface
 type DefaultClientManager struct {
 	serviceName     string
 	logger          *log.Logger
@@ -59,7 +64,7 @@ func (manager *DefaultClientManager)DecoratorInvoke(path string, hystrixName str
 			return err
 		}
 		if instance != nil && instance.GrpcPort <= 0 {
-			return errors.New("no rpc service")
+			return ErrRPCService
 		}
 
 		//grpc链路追踪zipkin上报设置
@@ -115,7 +120,6 @@ func genTracer(tracer opentracing.Tracer,svcName,address string) (opentracing.Tr
 
 	zipkinUrl := fmt.Sprintf("http://%s:%s%s",conf.TraceConfig.Host,conf.TraceConfig.Port,conf.TraceConfig.Url)
 	reporter  := zipkinhttp.NewReporter(zipkinUrl)     //上报地址
-
 	ep,err    := zipkinGo.NewEndpoint(svcName,address) //上传
 	if err != nil {
 		log.Fatal("endpoint error",err.Error())
