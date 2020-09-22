@@ -24,16 +24,16 @@ type RpcConf struct {
 type DiscoverConf struct {
 	Host string
 	Port string
-	ServiceName string
+	ServiceName string //应用注册的svc name
 	Weight int
-	InstanceId string
+	InstanceId string  //svc id
 }
 
 //配置中心
 type ConfigServerConf struct {
-	Id string
-	Profile string
-	Label string
+	Id string       //服务注册发现中心的配置中心注册的serviceName
+	Profile string  //
+	Label string    //git 分支
 }
 type ZookeeperConf struct {
 	Hosts []string

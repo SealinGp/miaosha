@@ -3,7 +3,6 @@ http:
   port: 9019
 
 rpc:
-  host: 127.0.0.1
   port: 9018
 
 discover:

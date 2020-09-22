@@ -28,11 +28,9 @@ import (
 )
 
 func main()  {
-	fmt.Println("?")
-	return
 	var (
 		servicePort = flag.String("service.port",bootstrap.HttpConfig.Port,"service port")
-		grpcAddr   = flag.String("grpc",bootstrap.RpcConfig.Port,"grpc listen address")
+		grpcAddr    = flag.String("grpc",bootstrap.RpcConfig.Port,"grpc listen address")
 	)
 	flag.Parse()
 
@@ -43,28 +41,27 @@ func main()  {
 	var (
 		tokenService service.TokenService
 		tokenGranter service.TokenGranter
-		tokenEnhancer service.TokenEnhancer
-		tokenStore service.TokenStore
+
 		userDetailsService service.UserDetailsService
 		clientDetailsService service.ClientDetailsService
 		srv service.Service
 	)
 
-	tokenEnhancer        = service.NewJwtTokenEnhancer("secret")
-	tokenStore           = service.NewJwtTokenStore(tokenEnhancer.(*service.JwtTokenEnhancer))
-	tokenService         = service.NewTokenService(tokenStore,tokenEnhancer)
+	//token services
+	tokenService         = service.NewDefaultTokenService("secret")
 	userDetailsService   = service.NewRemoteUserService()
+	tokenGranter         = service.NewComposeTokenGranter(map[string]service.TokenGranter{
+		"password"     : service.NewUsernamePasswordTokenGranter("password",userDetailsService,tokenService),
+		"refresh_token": service.NewRefreshGranter("refresh_token",tokenService),
+	})
 	clientDetailsService = service.NewMysqlClientDetailsService()
 	srv                  = service.NewCommentService()
-	tokenGranter         = service.NewComposeTokenGranter(map[string]service.TokenGranter{
-		"password":service.NewUsernamePasswordTokenGranter("password",userDetailsService,tokenService),
-		"refresh_token":service.NewRefreshGranter("refresh_token",tokenService),
-	})
 
+	//token endpoint
 	tokenEndpoint := endpoint.MakeTokenEndpoint(tokenGranter,clientDetailsService)
-	tokenEndpoint  = endpoint.MakeClientAuthorizationMiddleware(localconfig.Logger)(tokenEndpoint)
-	tokenEndpoint  = plugins.NewTokenBucketLimitterWithBuildIn(ratebucket)(tokenEndpoint)
-	tokenEndpoint  = kitzipkin.TraceEndpoint(localconfig.ZipkinTracer,"token-endpoint")(tokenEndpoint)
+	tokenEndpoint  = endpoint.MakeClientAuthorizationMiddleware(localconfig.Logger)(tokenEndpoint)           //认证
+	tokenEndpoint  = plugins.NewTokenBucketLimitterWithBuildIn(ratebucket)(tokenEndpoint)                    //限流
+	tokenEndpoint  = kitzipkin.TraceEndpoint(localconfig.ZipkinTracer,"token-endpoint")(tokenEndpoint) //日志追踪
 
 	checkTokenEndpoint := endpoint.MakeCheckTokenEndpoint(tokenService)
 	checkTokenEndpoint = endpoint.MakeClientAuthorizationMiddleware(localconfig.Logger)(checkTokenEndpoint)
