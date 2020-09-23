@@ -30,7 +30,7 @@ func MakeHttpHandler(
 	logger log.Logger,
 ) http.Handler {
 	r            := mux.NewRouter()
-	zipkinServer := zipkin.HTTPServerTrace(zipkinTracer,zipkin.Name("http-transport"))
+	zipkinServer := zipkin.HTTPServerTrace(zipkinTracer,zipkin.Name("oauth-http-transport"))
 	options      := []kithttp.ServerOption{
 		kithttp.ServerErrorHandler(transport.NewLogErrorHandler(logger)),
 		kithttp.ServerErrorEncoder(encodeError),

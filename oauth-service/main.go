@@ -4,11 +4,13 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	kitzipkin "github.com/go-kit/kit/tracing/zipkin"
-	"github.com/openzipkin/zipkin-go/propagation/b3"
-	"golang.org/x/time/rate"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/metadata"
+	"net"
+	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
+
 	localconfig "miaosha/oauth-service/config"
 	"miaosha/oauth-service/endpoint"
 	"miaosha/oauth-service/plugins"
@@ -19,15 +21,16 @@ import (
 	conf "miaosha/pkg/config"
 	register "miaosha/pkg/discover"
 	"miaosha/pkg/mysql"
-	"net"
-	"net/http"
-	"os"
-	"os/signal"
-	"syscall"
-	"time"
+
+	kitzipkin "github.com/go-kit/kit/tracing/zipkin"
+	"github.com/openzipkin/zipkin-go/propagation/b3"
+	"golang.org/x/time/rate"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
 )
 
 func main()  {
+	return
 	var (
 		servicePort = flag.String("service.port",bootstrap.HttpConfig.Port,"service port")
 		grpcAddr    = flag.String("grpc",bootstrap.RpcConfig.Port,"grpc listen address")
@@ -57,17 +60,22 @@ func main()  {
 	clientDetailsService = service.NewMysqlClientDetailsService()
 	srv                  = service.NewCommentService()
 
-	//token endpoint
+	//POST http://url?gran_type=password
+	//header: Basic base64(clientId:clientSecret)
+	//body: {username:xxx,password:xxx}
+	//resp: endpoint.TokenResponse
 	tokenEndpoint := endpoint.MakeTokenEndpoint(tokenGranter,clientDetailsService)
 	tokenEndpoint  = endpoint.MakeClientAuthorizationMiddleware(localconfig.Logger)(tokenEndpoint)           //认证
 	tokenEndpoint  = plugins.NewTokenBucketLimitterWithBuildIn(ratebucket)(tokenEndpoint)                    //限流
 	tokenEndpoint  = kitzipkin.TraceEndpoint(localconfig.ZipkinTracer,"token-endpoint")(tokenEndpoint) //日志追踪
 
+	//token解密|检查
+	//http
 	checkTokenEndpoint := endpoint.MakeCheckTokenEndpoint(tokenService)
 	checkTokenEndpoint = endpoint.MakeClientAuthorizationMiddleware(localconfig.Logger)(checkTokenEndpoint)
 	checkTokenEndpoint = plugins.NewTokenBucketLimitterWithBuildIn(ratebucket)(checkTokenEndpoint)
 	checkTokenEndpoint = kitzipkin.TraceEndpoint(localconfig.ZipkinTracer,"check-endpoint")(checkTokenEndpoint)
-
+	//grpc
 	gRPCCheckTokenEndpoint := endpoint.MakeCheckTokenEndpoint(tokenService)
 	gRPCCheckTokenEndpoint = plugins.NewTokenBucketLimitterWithBuildIn(ratebucket)(gRPCCheckTokenEndpoint)
 	gRPCCheckTokenEndpoint = kitzipkin.TraceEndpoint(localconfig.ZipkinTracer,"grpc-check-endpoint")(gRPCCheckTokenEndpoint)

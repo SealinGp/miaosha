@@ -16,7 +16,7 @@ func InitMysql(host,port,user,pwd,db string)  {
 		SetMaxOpenConns:300,
 		SetMaxIdleConns:10,
 	}
-	engin, err = gorose.Open(DbConfig)
+	engin, err = gorose.Open(&DbConfig)
 	if err != nil {
 		fmt.Println(err)
 		return

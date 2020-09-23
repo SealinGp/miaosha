@@ -17,14 +17,14 @@ func init()  {
 	if err := SubParse("http",&HttpConfig);err != nil {
 		log.Fatal("Fail to parse Http config",err.Error())
 	}
+	if err := SubParse("rpc",&RpcConfig);err != nil {
+		log.Fatal("Fail to parse rpc server",err.Error())
+	}
 	if err := SubParse("discover",&DiscoverConfig);err != nil {
 		log.Fatal("Fail to parse discover config",err.Error())
 	}
 	if err := SubParse("config",&ConfigServerConfig);err != nil {
 		log.Fatal("Fail to parse config server",err.Error())
-	}
-	if err := SubParse("rpc",&RpcConfig);err != nil {
-		log.Fatal("Fail to parse rpc server",err.Error())
 	}
 	if err := SubParse("zookeeper",&ZookeeperConfig);err != nil {
 		log.Fatal("Fail to parse zookeeper server:",err.Error())

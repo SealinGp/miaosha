@@ -1,10 +1,15 @@
+#1.read from local--------------
+
+#oauth服务的http地址
 http:
   host: 127.0.0.1
   port: 9019
 
+#oauth服务的grpc地址
 rpc:
   port: 9018
 
+#注册与发现中心服务端
 discover:
   Host: 127.0.0.1
   port: 8500
@@ -24,3 +29,27 @@ zookeeper:
     - 127.0.0.1
     - 127.0.0.2
   SecProductKey: test
+
+#zipin链路追踪服务端(url=上报地址)
+trace:
+  host: 127.0.0.1
+  port: 9411
+  url: "/api/v2/spans"
+
+#mysql服务端
+mysql:
+  host: 127.0.0.1
+  port: 3306
+
+#2.read from remote--------------
+#
+
+
+
+
+
+
+
+
+
+
