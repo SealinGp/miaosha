@@ -11,6 +11,7 @@ func init()  {
 	viper.AutomaticEnv()
 	initBootstrapConfig()
 
+	log.Println("bootstrap_config.go (local bootstrap.yaml):  http,rpc,discover,config ")
 	if err := viper.ReadInConfig();err != nil {
 		fmt.Println("err:",err.Error())
 	}

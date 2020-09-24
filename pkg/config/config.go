@@ -20,13 +20,13 @@ var ZipkinTracer *zk.Tracer
 var Logger kitLog.Logger
 
 func init()  {
-	fmt.Println("config 2")
 	Logger = kitLog.NewLogfmtLogger(os.Stderr)
 	Logger = kitLog.With(Logger,"ts",kitLog.DefaultTimestampUTC)
 	Logger = kitLog.With(Logger,"caller",kitLog.DefaultCaller)
 	viper.AutomaticEnv()
 	initDefault()
 
+	Logger.Log("remote","trace")
 	if err := LoadRemoteConfig();err != nil {
 		Logger.Log("Fail to load remote config:",err.Error())
 	}

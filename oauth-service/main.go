@@ -30,6 +30,7 @@ import (
 )
 
 func main()  {
+	fmt.Println(bootstrap.ZookeeperConfig)
 	return
 	var (
 		servicePort = flag.String("service.port",bootstrap.HttpConfig.Port,"service port")
