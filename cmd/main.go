@@ -3,8 +3,8 @@ package main
 import (
 	"github.com/gorilla/mux"
 	"github.com/openzipkin/zipkin-go"
-	zipkinhttp "github.com/openzipkin/zipkin-go/middleware/http"
-	httpreporter "github.com/openzipkin/zipkin-go/reporter/http"
+	zipkinMwHttp "github.com/openzipkin/zipkin-go/middleware/http"
+	zipkinRepHttp "github.com/openzipkin/zipkin-go/reporter/http"
 	"log"
 	"net/http"
 	"time"
@@ -12,7 +12,7 @@ import (
 
 func main() {
 	//链路上报地址
-	reporter := httpreporter.NewReporter("http://localhost:9411/api/v2/spans")
+	reporter := zipkinRepHttp.NewReporter("http://localhost:9411/api/v2/spans")
 	defer reporter.Close()
 
 	//本地链路地址
@@ -28,11 +28,11 @@ func main() {
 	}
 
 	//zipkin返回body大小中间件
-	serverMiddleware := zipkinhttp.NewServerMiddleware(
-		tracer,zipkinhttp.TagResponseSize(true),
+	serverMiddleware := zipkinMwHttp.NewServerMiddleware(
+		tracer,zipkinMwHttp.TagResponseSize(true),
 	)
 	//zipkin客户端
-	client,err := zipkinhttp.NewClient(tracer,zipkinhttp.ClientTrace(true))
+	client,err := zipkinMwHttp.NewClient(tracer,zipkinMwHttp.ClientTrace(true))
 	if err != nil {
 		log.Fatalf("unable to create client: %+v\n",err)
 	}
@@ -49,7 +49,7 @@ func main() {
 	}
 }
 
-func someFunc(client *zipkinhttp.Client,url string) http.HandlerFunc {
+func someFunc(client *zipkinMwHttp.Client,url string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Printf("some_function called with method: %s\n",r.Method)
 
@@ -80,7 +80,7 @@ func someFunc(client *zipkinhttp.Client,url string) http.HandlerFunc {
 	}
 }
 
-func otherFunc(client *zipkinhttp.Client) http.HandlerFunc {
+func otherFunc(client *zipkinMwHttp.Client) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Printf("other_function called with method: %s\n",r.Method)
 		time.Sleep(50 * time.Millisecond)
