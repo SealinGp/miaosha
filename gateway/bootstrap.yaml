@@ -22,8 +22,3 @@ zookeeper:
     - 127.0.0.1
     - 127.0.0.2
   SecProdictKey: test
-
-
-hystrix:
-  host: 127.0.0.1
-  port: 9010

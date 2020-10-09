@@ -1,7 +1,6 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"net"
 	"net/http"
@@ -24,6 +23,8 @@ import (
 
 func main()  {
 	zipkinURL := config.GetZipkinUrl()
+	fmt.Println(zipkinURL)
+	return
 
 	var logger log.Logger
 	{
