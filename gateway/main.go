@@ -22,10 +22,6 @@ import (
 )
 
 func main()  {
-	zipkinURL := config.GetZipkinUrl()
-	fmt.Println(zipkinURL)
-	return
-
 	var logger log.Logger
 	{
 		logger = log.NewLogfmtLogger(os.Stderr)
