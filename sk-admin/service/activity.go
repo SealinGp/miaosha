@@ -58,7 +58,7 @@ func (activityServiceImpl *ActivityServiceImpl) CreateActivity(activity *model.A
 		return err
 	}
 
-	activityServiceImpl.syncToZk(activity)
+	return activityServiceImpl.syncToZk(activity)
 }
 
 func (activityServiceImpl *ActivityServiceImpl) syncToZk(activity *model.Activity) error {

@@ -6,27 +6,31 @@ import (
 )
 
 type Product struct {
-	ProductId   int    `json:"product_id"`
-	ProductName string `json:"product_name"`
-	Total       int    `json:"total"`
-	Status      int    `json:"status"`
+	ProductModelId   int    `json:"product_id"`
+	ProductModelName string `json:"product_name"`
+	Total            int    `json:"total"`
+	Status           int    `json:"status"`
 }
 
-type ProductMap struct {
+type ProductModel struct {
 }
 
-func (p *Product) getTableName() string {
+func NewProductModel() *ProductModel {
+	return &ProductModel{}
+}
+
+func (p *ProductModel) getTableName() string {
 	return "product"
 }
 
-func (p *Product) GetProductList() ([]gorose.Data, error) {
+func (p *ProductModel) GetProductList() ([]gorose.Data, error) {
 	return mysql.DB().Table(p.getTableName()).Get()
 }
 
-func (p *Product) CreateProduct(product *Product) error {
+func (p *ProductModel) CreateProduct(product *Product) error {
 	conn := mysql.DB()
 	_, err := conn.Table(p.getTableName()).Data(map[string]interface{}{
-		"product_name": product.ProductName,
+		"product_name": product.ProductModelName,
 		"total":        product.Total,
 		"status":       product.Status,
 	}).Insert()
