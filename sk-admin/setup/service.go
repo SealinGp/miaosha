@@ -1,13 +1,18 @@
 package setup
 
 import (
+	"context"
 	"flag"
 	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
+	kitzipkin "github.com/go-kit/kit/tracing/zipkin"
 	stdprometheus "github.com/prometheus/client_golang/prometheus"
+	"golang.org/x/time/rate"
 	"log"
 	"miaosha/pkg/config"
+	"miaosha/sk-admin/endpoint"
 	"miaosha/sk-admin/plugins"
 	"miaosha/sk-admin/service"
+	"time"
 )
 
 func InitServer(host, servicePort string) {
@@ -48,5 +53,30 @@ func InitServer(host, servicePort string) {
 
 	productService = plugins.ProductLoggingMiddleware(config.Logger)(productService)
 	productService = plugins.ProductMetrics(requestCount, requestLatency)(productService)
+
+	ratebucket := rate.NewLimiter(rate.Every(time.Second), 100)
+
+	getActivityEnd := endpoint.MakeGetActivityEndpoint(activityService)
+	getActivityEnd = plugins.NewTokenBucketLimitterWithBuildIn(ratebucket)(getActivityEnd)
+	getActivityEnd = kitzipkin.TraceEndpoint(config.ZipkinTracer, "get-activity")(getActivityEnd)
+
+	createActivityEnd := endpoint.MakeCreateActivityEndpoint(activityService)
+	createActivityEnd = plugins.NewTokenBucketLimitterWithBuildIn(ratebucket)(createActivityEnd)
+	createActivityEnd = kitzipkin.TraceEndpoint(config.ZipkinTracer, "create-activity")(createActivityEnd)
+
+	createProductEnd := endpoint.MakeCreateProductEndpoint(productService)
+	createProductEnd = plugins.NewTokenBucketLimitterWithBuildIn(ratebucket)(createProductEnd)
+	createProductEnd = kitzipkin.TraceEndpoint(config.ZipkinTracer, "create-product")(createProductEnd)
+
+	healthCheckEnd := endpoint.MakeHealthCheckEndpoint(skAdminService)
+	healthCheckEnd = kitzipkin.TraceEndpoint(config.ZipkinTracer, "health-endpoint")(healthCheckEnd)
+
+	endpts := endpoint.SkAdminEndpoints{
+		GetActivityEndpoint:    getActivityEnd,
+		CreateActivityEndpoint: createActivityEnd,
+		CreateProductEndpoint:  createProductEnd,
+		HealthCheckEndpoint:    healthCheckEnd,
+	}
+	ctx := context.Background()
 
 }
