@@ -14,6 +14,7 @@ type SkAdminEndpoints struct {
 	GetActivityEndpoint    endpoint.Endpoint
 	CreateActivityEndpoint endpoint.Endpoint
 	CreateProductEndpoint  endpoint.Endpoint
+	GetProductEndpoint     endpoint.Endpoint
 	HealthCheckEndpoint    endpoint.Endpoint
 }
 
@@ -59,6 +60,17 @@ func MakeCreateActivityEndpoint(svc service.ActivityService) endpoint.Endpoint {
 		req := request.(*model.Activity)
 		cErr := svc.CreateActivity(req)
 		return CreateResponse{Error: cErr}, nil
+	}
+}
+
+//  make endpoint
+func MakeGetProductEndpoint(svc service.ProductService) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		getProductList, calError := svc.GetProductList()
+		if calError != nil {
+			return GetResponse{Result: nil, Error: calError}, nil
+		}
+		return GetResponse{Result: getProductList, Error: calError}, nil
 	}
 }
 

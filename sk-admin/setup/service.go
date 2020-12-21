@@ -3,15 +3,22 @@ package setup
 import (
 	"context"
 	"flag"
+	"fmt"
 	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
 	kitzipkin "github.com/go-kit/kit/tracing/zipkin"
 	stdprometheus "github.com/prometheus/client_golang/prometheus"
 	"golang.org/x/time/rate"
 	"log"
 	"miaosha/pkg/config"
+	"miaosha/pkg/discover"
 	"miaosha/sk-admin/endpoint"
 	"miaosha/sk-admin/plugins"
 	"miaosha/sk-admin/service"
+	"miaosha/sk-admin/transport"
+	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
 	"time"
 )
 
@@ -68,6 +75,8 @@ func InitServer(host, servicePort string) {
 	createProductEnd = plugins.NewTokenBucketLimitterWithBuildIn(ratebucket)(createProductEnd)
 	createProductEnd = kitzipkin.TraceEndpoint(config.ZipkinTracer, "create-product")(createProductEnd)
 
+	GetProductEnd := endpoint.MakeGetProductEndpoint(productService)
+
 	healthCheckEnd := endpoint.MakeHealthCheckEndpoint(skAdminService)
 	healthCheckEnd = kitzipkin.TraceEndpoint(config.ZipkinTracer, "health-endpoint")(healthCheckEnd)
 
@@ -75,8 +84,27 @@ func InitServer(host, servicePort string) {
 		GetActivityEndpoint:    getActivityEnd,
 		CreateActivityEndpoint: createActivityEnd,
 		CreateProductEndpoint:  createProductEnd,
+		GetProductEndpoint:     GetProductEnd,
 		HealthCheckEndpoint:    healthCheckEnd,
 	}
 	ctx := context.Background()
+	r := transport.MakeHttpHandler(ctx, endpts, config.ZipkinTracer, config.Logger)
 
+	go func() {
+		fmt.Println("http server start at port:" + servicePort)
+		discover.Register()
+		handler := r
+		errChan <- http.ListenAndServe(":"+servicePort, handler)
+	}()
+
+	go func() {
+		c := make(chan os.Signal, 1)
+		signal.Notify(c, syscall.SIGINT, syscall.SIGTERM)
+		errChan <- fmt.Errorf("%s", <-c)
+	}()
+
+	error := <-errChan
+	//服务退出取消注册
+	discover.Deregister()
+	fmt.Println(error)
 }
