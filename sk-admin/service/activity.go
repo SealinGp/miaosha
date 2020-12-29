@@ -7,6 +7,7 @@ import (
 	"github.com/gohouse/gorose/v2"
 	"github.com/samuel/go-zookeeper/zk"
 	"github.com/unknwon/com"
+	"log"
 	"miaosha/pkg/config"
 	"miaosha/sk-admin/model"
 	"time"
@@ -110,6 +111,7 @@ func (activityServiceImpl *ActivityServiceImpl) loadProductFromZk(key string) ([
 	if err != nil {
 		return nil, err
 	}
+	log.Printf("[I] get from zk success. data:%v", s)
 
 	var secProductInfo []*model.SecProductInfoConf
 	err = json.Unmarshal(v, &secProductInfo)

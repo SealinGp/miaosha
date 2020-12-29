@@ -103,8 +103,8 @@ func InitServer(host, servicePort string) {
 		errChan <- fmt.Errorf("%s", <-c)
 	}()
 
-	error := <-errChan
+	err := <-errChan
 	//服务退出取消注册
 	discover.Deregister()
-	fmt.Println(error)
+	fmt.Println(err)
 }

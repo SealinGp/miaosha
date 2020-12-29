@@ -10,12 +10,12 @@ import (
 )
 
 //初始化zookeeper
-func InitZk()  {
-	conn, _, err := zk.Connect(bootstrap.ZookeeperConfig.Hosts,time.Second*5)
+func InitZk() {
+	conn, _, err := zk.Connect(bootstrap.ZookeeperConfig.Hosts, time.Second*5)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-	conf.Zk.ZkConn        = conn
+	conf.Zk.ZkConn = conn
 	conf.Zk.SecProductKey = bootstrap.ZookeeperConfig.SecProductKey
 }

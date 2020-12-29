@@ -27,7 +27,6 @@ rpc:
 zookeeper:
   Hosts:
     - 127.0.0.1
-    - 127.0.0.2
   SecProductKey: test
 
 #2.load from remote--------------

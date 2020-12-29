@@ -1,0 +1,26 @@
+http:
+  host: localhost
+  port: 9030
+
+rpc:
+  host: localhost
+  port: 9132
+
+discover:
+  host: localhost
+  port: 8500
+  instanceId: sk-admin-localhost
+  serviceName: sk-admin
+  weight: 1
+
+config:
+  id: configserver
+  profile: "dev"
+  label: "master"
+
+#zookeeper服务端信息
+zookeeper:
+  Hosts:
+    - 127.0.0.1
+    - 127.0.0.2
+  SecProductKey: test
