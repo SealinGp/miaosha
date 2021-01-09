@@ -10,20 +10,20 @@ import (
 	"time"
 )
 
-func RunProcess() {
+func RunProcess(ctx context.Context) {
 	for i := 0; i < conf.SecKill.CoreReadRedisGoroutineNum; i++ {
 		config.SecLayerCtx.WaitGroup.Add(1)
-		go HandleReader()
+		go HandleReader(ctx)
 	}
 
 	for i := 0; i < conf.SecKill.CoreWriteRedisGoroutineNum; i++ {
 		config.SecLayerCtx.WaitGroup.Add(1)
-		go HandleWrite()
+		go HandleWrite(ctx)
 	}
 
 	for i := 0; i < conf.SecKill.CoreHandleGoroutineNum; i++ {
 		config.SecLayerCtx.WaitGroup.Add(1)
-		go HandleUser()
+		go HandleUser(ctx)
 	}
 
 	log.Printf("all process goroutine started")
@@ -32,10 +32,16 @@ func RunProcess() {
 	return
 }
 
-func HandleReader() {
+func HandleReader(pctx context.Context) {
 	for {
 		conn := conf.Redis.RedisConn
 		for {
+			select {
+			case <-pctx.Done():
+				return
+			default:
+			}
+
 			//从Redis队列中取出数据
 			data, err := conn.BRPop(time.Second, conf.Redis.Proxy2layerQueueName).Result()
 			if err != nil {
@@ -73,10 +79,16 @@ func HandleReader() {
 	}
 }
 
-func HandleWrite() {
+func HandleWrite(ctx context.Context) {
 	log.Println("handle write running")
 
 	for res := range config.SecLayerCtx.Handle2WriteChan {
+		select {
+		case <-ctx.Done():
+			return
+		default:
+		}
+
 		fmt.Println("===", res)
 		err := sendToRedis(res)
 		if err != nil {

@@ -1,6 +1,7 @@
 package srv_redis
 
 import (
+	"context"
 	"crypto/md5"
 	"fmt"
 	"log"
@@ -11,7 +12,7 @@ import (
 	"time"
 )
 
-func HandleUser() {
+func HandleUser(ctx context.Context) {
 
 	log.Println("handle user running")
 	for req := range config.SecLayerCtx.Read2HandleChan {
@@ -30,6 +31,8 @@ func HandleUser() {
 		case <-timer.C:
 			log.Printf("send to response chan timeout, res : %v", res)
 			break
+		case <-ctx.Done():
+			return
 		}
 	}
 	return
